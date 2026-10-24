@@ -1,0 +1,22 @@
+/* Tarjeta base: fondo elevado, borde sutil y hover discreto. */
+.card {
+  position: relative;
+  background: linear-gradient(180deg, var(--db-surface-2) 0%, var(--db-surface) 100%);
+  border: 1px solid var(--db-line);
+  border-radius: var(--db-radius);
+  padding: 32px;
+  box-shadow: var(--db-shadow);
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  border-color: var(--db-line-cyan);
+  transform: translateY(-2px);
+  box-shadow: var(--db-shadow), var(--db-glow-soft);
+}
+
+@media (max-width: 560px) {
+  .card {
+    padding: 22px;
+  }
+}
