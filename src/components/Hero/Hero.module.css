@@ -1,0 +1,209 @@
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 120px 24px 140px;
+  background: radial-gradient(120% 90% at 50% 0%, #10243a 0%, var(--db-bg) 55%, var(--db-bg-deep) 100%);
+  background-attachment: fixed;
+}
+
+.layers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.orbA,
+.orbB,
+.orbC {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.55;
+}
+
+.orbA {
+  width: 46vw;
+  height: 46vw;
+  top: -10vw;
+  left: -6vw;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.5), transparent 65%);
+  animation: float 14s ease-in-out infinite;
+}
+
+.orbB {
+  width: 38vw;
+  height: 38vw;
+  bottom: -12vw;
+  right: -8vw;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.42), transparent 68%);
+  animation: float 18s ease-in-out infinite reverse;
+}
+
+.orbC {
+  width: 30vw;
+  height: 30vw;
+  top: 40%;
+  left: 55%;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.28), transparent 70%);
+  animation: float 22s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -40px, 0) scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbA,
+  .orbB,
+  .orbC {
+    animation: none;
+  }
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(34, 211, 238, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.07) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(circle at 50% 45%, #000 0%, transparent 72%);
+  -webkit-mask-image: radial-gradient(circle at 50% 45%, #000 0%, transparent 72%);
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 900px;
+  animation: rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content {
+    animation: none;
+  }
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--db-brand);
+}
+
+.title {
+  margin: 18px 0 0;
+  font-size: clamp(3.5rem, 14vw, 9rem);
+  line-height: 0.95;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  background: linear-gradient(180deg, #ffffff 0%, #a5f3fc 55%, #22d3ee 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 70px rgba(34, 211, 238, 0.25);
+}
+
+.rule {
+  display: block;
+  width: 96px;
+  height: 3px;
+  margin: 28px auto;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--db-brand), transparent);
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.65);
+}
+
+.lead {
+  margin: 0 auto;
+  max-width: 620px;
+  font-size: clamp(1rem, 2.4vw, 1.25rem);
+  line-height: 1.6;
+  color: var(--db-muted);
+}
+
+.scrollHint {
+  position: absolute;
+  bottom: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--db-faint);
+}
+
+.scrollText {
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.scrollMouse {
+  width: 24px;
+  height: 38px;
+  border: 1px solid rgba(34, 211, 238, 0.5);
+  border-radius: 999px;
+  display: flex;
+  justify-content: center;
+  padding-top: 7px;
+}
+
+.scrollWheel {
+  width: 3px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--db-brand);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.9);
+  animation: wheel 1.8s ease-in-out infinite;
+}
+
+@keyframes wheel {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrollWheel {
+    animation: none;
+  }
+}
+
+.scrollHint:hover .scrollText {
+  color: var(--db-brand);
+}

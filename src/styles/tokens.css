@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Sora:wght@600;700;800&display=swap');
+
+/*
+ * Tokens globales del dashboard — Modo Oscuro con acento Cyan.
+ * Se importan una sola vez (en Dashboard.tsx) y quedan disponibles
+ * como variables CSS para todos los CSS Modules de los componentes.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Fondos */
+  --db-bg: #090d16;
+  --db-bg-deep: #060911;
+  --db-surface: #0f172a;
+  --db-surface-2: #131c31;
+  --db-surface-3: #1b2740;
+
+  /* Texto */
+  --db-ink: #e2e8f0;
+  --db-ink-strong: #f8fafc;
+  --db-muted: #94a3b8;
+  --db-faint: #64748b;
+
+  /* Bordes */
+  --db-line: #1e293b;
+  --db-line-strong: #334155;
+  --db-line-cyan: rgba(34, 211, 238, 0.22);
+
+  /* Acento Cyan */
+  --db-brand: #22d3ee;
+  --db-brand-strong: #06b6d4;
+  --db-brand-ink: #04121a;
+  --db-brand-soft: rgba(34, 211, 238, 0.12);
+
+  /* Sombras / glow */
+  --db-shadow: 0 1px 2px rgba(2, 6, 23, 0.6), 0 12px 32px rgba(2, 6, 23, 0.55);
+  --db-shadow-lg: 0 24px 70px rgba(2, 6, 23, 0.75);
+  --db-glow: 0 0 0 1px rgba(34, 211, 238, 0.25), 0 0 22px rgba(34, 211, 238, 0.18);
+  --db-glow-soft: 0 0 30px rgba(34, 211, 238, 0.12);
+
+  /* Tipografía */
+  --db-font: 'Atkinson Hyperlegible', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --db-display: 'Sora', 'Atkinson Hyperlegible', system-ui, sans-serif;
+
+  /* Layout */
+  --db-navbar-h: 72px;
+  --db-container: 1360px;
+  --db-radius: 20px;
+  --db-radius-lg: 28px;
+}

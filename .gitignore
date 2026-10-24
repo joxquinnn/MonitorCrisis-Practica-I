@@ -1,3 +1,24 @@
+# Environment Variables & Secrets (PROTECCIÓN DE CLAVES)
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.*.local
+!.env.example
+
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Production / Build Outputs
+dist/
+dist-ssr/
+build/
+out/
+*.out
+
 # Logs
 logs
 *.log
@@ -7,18 +28,26 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
+# Editor Directories and Files
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# Cache & Temporary Tooling Files
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+.vite/
+.opencode/

@@ -1,0 +1,111 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--db-display);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--db-ink);
+}
+
+.wrap {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.track,
+.value {
+  fill: none;
+  stroke-width: 16;
+  stroke-linecap: round;
+}
+
+.track {
+  stroke: #1e293b;
+}
+
+.value {
+  stroke: var(--tone-solid);
+  filter: drop-shadow(0 0 8px var(--tone-bg));
+  transition: stroke-dasharray 0.6s ease;
+}
+
+.readout {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.percent {
+  font-family: var(--db-display);
+  font-size: 2.6rem;
+  line-height: 1;
+  font-weight: 800;
+  color: var(--tone-fg);
+  text-shadow: 0 0 26px var(--tone-bg);
+  font-variant-numeric: tabular-nums;
+}
+
+.caption {
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: var(--db-muted);
+}
+
+.lights {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.light {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--db-line);
+  color: var(--db-faint);
+  font-size: 0.85rem;
+}
+
+.lightDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--tone-solid);
+  opacity: 0.45;
+}
+
+.lightActive {
+  background: var(--tone-bg);
+  border-color: var(--tone-solid);
+  color: var(--tone-fg);
+  font-weight: 700;
+}
+
+.lightActive .lightDot {
+  opacity: 1;
+  box-shadow: 0 0 10px var(--tone-solid);
+}
