@@ -1,0 +1,23 @@
+.title {
+  margin: 0 0 18px;
+  font-family: var(--db-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--db-ink);
+}
+
+.name {
+  margin: 0;
+  font-family: var(--db-display);
+  font-size: clamp(1.4rem, 3.4vw, 2rem);
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--db-brand-strong);
+}
+
+.hint {
+  margin: 10px 0 0;
+  font-size: 0.9rem;
+  color: var(--db-muted);
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,75 @@
+.title {
+  margin: 0 0 18px;
+  font-family: var(--db-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--db-ink);
+}
+
+.total {
+  margin: 0;
+  font-family: var(--db-display);
+  font-size: clamp(2.6rem, 6vw, 3.4rem);
+  line-height: 1;
+  font-weight: 700;
+  color: var(--db-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.totalLabel {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  color: var(--db-muted);
+}
+
+.variation {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--tone-bg);
+  border: 1px solid var(--tone-solid);
+  color: var(--tone-fg);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.variationIcon {
+  display: inline-flex;
+}
+
+.lastAlert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--db-line-strong);
+  font-size: 0.9rem;
+  color: var(--db-ink);
+}
+
+.lastAlertIcon {
+  display: inline-flex;
+  color: var(--db-brand);
+}
+
+.lastAlertLabel {
+  color: var(--db-muted);
+}
+
+.timeValue {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+/* Debe ir tras .total para imponerse. */
+.noData {
+  font-family: var(--db-font);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--db-muted);
+}

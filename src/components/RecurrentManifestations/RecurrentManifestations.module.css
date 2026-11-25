@@ -1,0 +1,132 @@
+.head {
+  margin-bottom: 20px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--db-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--db-ink);
+}
+
+.caption {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  color: var(--db-muted);
+}
+
+.empty {
+  margin: 0;
+  padding: 22px;
+  border-radius: var(--db-radius);
+  background: var(--db-surface-2);
+  border: 1px dashed var(--db-line-strong);
+  color: var(--db-muted);
+  text-align: center;
+}
+
+.bars {
+  display: grid;
+  gap: 18px;
+  margin: 0 0 26px;
+  padding: 0;
+  list-style: none;
+}
+
+.barItem {
+  display: grid;
+  gap: 8px;
+}
+
+.barHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.barName {
+  font-weight: 700;
+  color: var(--db-ink);
+}
+
+.barValues {
+  font-size: 0.85rem;
+  color: var(--db-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.track {
+  width: 100%;
+  height: 16px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  border: 1px solid var(--db-line);
+  overflow: hidden;
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  background: var(--db-brand);
+  transition: width 0.4s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fill {
+    transition: none;
+  }
+}
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.tableCaption {
+  margin-bottom: 10px;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--db-muted);
+}
+
+.table th,
+.table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--db-line-strong);
+  text-align: left;
+}
+
+.table thead th {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--db-muted);
+  border-bottom: 1px solid var(--db-line);
+}
+
+.table tbody th {
+  font-weight: 700;
+  color: var(--db-ink);
+}
+
+.table tbody td {
+  color: var(--db-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.table tbody tr:last-child th,
+.table tbody tr:last-child td {
+  border-bottom: none;
+}

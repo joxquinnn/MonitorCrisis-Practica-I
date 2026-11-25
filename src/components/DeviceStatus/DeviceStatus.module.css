@@ -1,0 +1,104 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--db-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--db-ink);
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px;
+  border-radius: var(--db-radius);
+  background: var(--db-surface-2);
+  border: 1px solid var(--db-line);
+}
+
+.rowBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.rowIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--db-surface);
+  border: 1px solid var(--db-line);
+  color: var(--db-brand);
+  flex-shrink: 0;
+}
+
+.rowLabel {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--db-muted);
+}
+
+.rowValue {
+  margin: 4px 0 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--db-ink);
+}
+
+.numValue {
+  font-variant-numeric: tabular-nums;
+}
+
+.batteryValue {
+  color: var(--tone-fg);
+}
+
+.valueOk {
+  color: #047857;
+}
+
+.valueOff {
+  color: #b91c1c;
+}
+
+/* Riel neutro + relleno con color sólido (contraste >= 3:1). */
+.progress {
+  width: 100%;
+  height: 10px;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  border: 1px solid #cbd5e1;
+  overflow: hidden;
+}
+
+.progressFill {
+  display: block;
+  height: 100%;
+  background: var(--tone-fg);
+  transition: width 0.4s ease;
+}
+
+/* Debe ir al final para imponerse a .rowValue. */
+.noData {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--db-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progressFill {
+    transition: none;
+  }
+}
