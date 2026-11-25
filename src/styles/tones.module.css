@@ -1,26 +1,26 @@
-/* Tonos semánticos (modo oscuro): cada componente que recibe un `Tone` aplica una de
-   estas clases y luego usa var(--tone-fg) / var(--tone-bg) / var(--tone-solid) en su CSS. */
+/* Tonos semánticos clínicos (modo claro). Cada estado se comunica con
+   color + ícono + texto, nunca sólo con color. */
 
 .tone_ok {
-  --tone-fg: #34d399;
-  --tone-bg: rgba(16, 185, 129, 0.14);
-  --tone-solid: #10b981;
+  --tone-fg: #047857;
+  --tone-bg: #ecfdf5;
+  --tone-solid: #a7f3d0;
 }
 
 .tone_warn {
-  --tone-fg: #fbbf24;
-  --tone-bg: rgba(245, 158, 11, 0.14);
-  --tone-solid: #f59e0b;
+  --tone-fg: #b45309;
+  --tone-bg: #fffbeb;
+  --tone-solid: #fde68a;
 }
 
 .tone_danger {
-  --tone-fg: #f87171;
-  --tone-bg: rgba(239, 68, 68, 0.14);
-  --tone-solid: #ef4444;
+  --tone-fg: #b91c1c;
+  --tone-bg: #fef2f2;
+  --tone-solid: #fecaca;
 }
 
 .tone_neutral {
-  --tone-fg: #cbd5e1;
-  --tone-bg: rgba(148, 163, 184, 0.12);
-  --tone-solid: #94a3b8;
+  --tone-fg: #475569;
+  --tone-bg: #f8fdff;
+  --tone-solid: #e2e8f0;
 }

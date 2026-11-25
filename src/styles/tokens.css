@@ -1,50 +1,43 @@
-@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Sora:wght@600;700;800&display=swap');
-
 /*
- * Tokens globales del dashboard — Modo Oscuro con acento Cyan.
- * Se importan una sola vez (en Dashboard.tsx) y quedan disponibles
- * como variables CSS para todos los CSS Modules de los componentes.
+ * Tokens globales del dashboard — Modo Claro clínico con acento celeste.
+ * Todos los pares texto/fondo de este archivo cumplen WCAG 2.1 AA.
  */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   /* Fondos */
-  --db-bg: #090d16;
-  --db-bg-deep: #060911;
-  --db-surface: #0f172a;
-  --db-surface-2: #131c31;
-  --db-surface-3: #1b2740;
+  --db-bg: #f8fdff;
+  --db-surface: #ffffff;
+  --db-surface-2: #ecfeff;
+  --db-surface-3: #e0f2fe;
 
-  /* Texto */
-  --db-ink: #e2e8f0;
-  --db-ink-strong: #f8fafc;
-  --db-muted: #94a3b8;
-  --db-faint: #64748b;
+  /* Texto (nunca cyan pastel) */
+  --db-ink: #0f172a;
+  --db-ink-strong: #0f172a;
+  --db-muted: #475569;
+  --db-faint: #475569;
 
   /* Bordes */
-  --db-line: #1e293b;
-  --db-line-strong: #334155;
-  --db-line-cyan: rgba(34, 211, 238, 0.22);
+  --db-line: #cffafe;
+  --db-line-strong: #e2e8f0;
 
-  /* Acento Cyan */
-  --db-brand: #22d3ee;
-  --db-brand-strong: #06b6d4;
-  --db-brand-ink: #04121a;
-  --db-brand-soft: rgba(34, 211, 238, 0.12);
+  /* Acento interactivo */
+  --db-brand: #0e7490;
+  --db-brand-strong: #155e75;
+  --db-brand-ink: #ffffff;
+  --db-brand-soft: #e0f2fe;
 
-  /* Sombras / glow */
-  --db-shadow: 0 1px 2px rgba(2, 6, 23, 0.6), 0 12px 32px rgba(2, 6, 23, 0.55);
-  --db-shadow-lg: 0 24px 70px rgba(2, 6, 23, 0.75);
-  --db-glow: 0 0 0 1px rgba(34, 211, 238, 0.25), 0 0 22px rgba(34, 211, 238, 0.18);
-  --db-glow-soft: 0 0 30px rgba(34, 211, 238, 0.12);
+  /* Sombras */
+  --db-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --db-shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.07);
 
   /* Tipografía */
-  --db-font: 'Atkinson Hyperlegible', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --db-display: 'Sora', 'Atkinson Hyperlegible', system-ui, sans-serif;
+  --db-font: 'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --db-display: 'Sora', 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
 
   /* Layout */
-  --db-navbar-h: 72px;
-  --db-container: 1360px;
-  --db-radius: 20px;
-  --db-radius-lg: 28px;
+  --db-navbar-h: 68px;
+  --db-container: 1280px;
+  --db-radius: 18px;
+  --db-radius-lg: 22px;
 }

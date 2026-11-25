@@ -1,4 +1,6 @@
-/* Base global: Modo Oscuro con acento Cyan. */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@600;700&display=swap');
+
+/* Base global: Modo Claro clínico con acento celeste. */
 
 *,
 *::before,
@@ -13,9 +15,9 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--db-bg, #090d16);
-  color: var(--db-ink, #e2e8f0);
-  font-family: var(--db-font, system-ui, sans-serif);
+  background: var(--db-bg, #f8fdff);
+  color: var(--db-ink, #0f172a);
+  font-family: var(--db-font, 'Plus Jakarta Sans', system-ui, sans-serif);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -25,9 +27,9 @@ body {
 h1,
 h2,
 h3 {
-  font-family: var(--db-display, system-ui, sans-serif);
+  font-family: var(--db-display, 'Sora', system-ui, sans-serif);
   font-weight: 700;
-  color: var(--db-ink-strong, #f8fafc);
+  color: var(--db-ink, #0f172a);
 }
 
 p {
@@ -37,4 +39,18 @@ p {
 #root {
   width: 100%;
   min-height: 100vh;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
