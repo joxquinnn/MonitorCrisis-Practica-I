@@ -1,27 +1,27 @@
 # 📊 Enterprise IoT Real-Time Monitoring Dashboard
 
-Plataforma corporativa de monitoreo e inteligencia operativa diseñada para la supervisión continua, análisis en tiempo real e interpretabilidad de telemetría IoT integrada con **ThingsBoard Enterprise**. La solución proporciona una interfaz centralizada de alta disponibilidad para la toma de decisiones estratégicas e identificación temprana de anomalías operativas.
+Plataforma corporativa de monitoreo de crisis en tiempo real sobre **ThingsBoard Enterprise**. La interfaz es un panel **clínico en Modo Claro**: sólo renderiza datos presentes en el payload oficial del dispositivo y marca explícitamente la información no recibida.
 
 ![IoT Dashboard Banner](https://img.shields.io/badge/Status-Production--Ready-cyan?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
-![Tech Stack](https://img.shields.io/badge/Stack-React_%7C_TypeScript_%7C_Tailwind-black?style=for-the-badge)
+![Tech Stack](https://img.shields.io/badge/Stack-React_19_%7C_TypeScript_%7C_CSS_Modules-black?style=for-the-badge)
 
 ---
 
-## 🌟 Valor de Negocio y Capacidades Clave
+## 🌟 Capacidades clave
 
-* **Monitoreo en Tiempo Real de Alta Disponibilidad:** Transmisión bi-direccional de métricas operativas vía WebSockets de baja latencia, garantizando la visibilidad instantánea del estado de dispositivos críticos y niveles de energía.
-* **Análisis Histórico y Diagnóstico Proactivo:** Visualización agregada de patrones de comportamiento, niveles de severidad y tendencias de eventos para optimizar tiempos de respuesta operativos (MTTR).
-* **Gestión Inteligente de Alertas:** Panel de eventos clasificado por niveles de severidad con indicadores dinámicos para simplificar la priorización de incidencias.
-* **Interfaz de Grado Industrial:** Diseño optimizado en *Dark Mode* con acentos Cyan de alto contraste y arquitectura de componentes *Glassmorphism*, diseñado para salas de control y centros de monitoreo (NOC).
+* **Monitoreo en tiempo real:** telemetría vía WebSocket de baja latencia con estado de conexión, nivel de batería y última sincronización.
+* **Estado clínico veraz:** estado actual, gravedad en porcentaje, patrón motriz y situación de atención de la alerta, con estados que combinan **color + ícono + texto**.
+* **Resumen de alertas y síntomas:** total del rango de fecha, variación respecto al periodo anterior, última alerta registrada, síntoma predominante y manifestaciones recurrentes con frecuencia y porcentaje exactos.
+* **Accesibilidad (WCAG 2.1 AA):** HTML semántico, jerarquía de encabezados, `aria-live`/`role="alert"`, `role="progressbar"`, foco visible y respeto a `prefers-reduced-motion`.
 
 ---
 
 ## 🛠️ Arquitectura Tecnológica
 
-* **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, Lucide Icons.
-* **IoT Engine & Data Pipeline:** ThingsBoard Cloud / Enterprise (WebSockets API & MQTT Protocol).
-* **Gestión de Estado y Datos:** Hooks optimizados para streaming de datos en tiempo real y tipado estricto.
+* **Frontend:** React 19, TypeScript, Vite, CSS Modules (sin Tailwind).
+* **Tipografía:** `Sora` (títulos) y `Plus Jakarta Sans` (cuerpo) desde Google Fonts, con fallback de sistema local.
+* **IoT Engine:** ThingsBoard Cloud / Enterprise (API + WebSocket).
 
 ---
 
@@ -41,21 +41,26 @@ cd iot-monitoring-dashboard
 
 ### 2. Configurar variables de entorno
 
-Crea un archivo `.env` en la raíz del proyecto con la configuración de tu instancia de ThingsBoard:
+Crea un archivo `.env` en la raíz del proyecto:
 
 ```env
-VITE_THINGSBOARD_WS_URL=wss://demo.thingsboard.io/api/ws
-VITE_THINGSBOARD_ACCESS_TOKEN=tu_token_de_acceso
+VITE_TB_URL=https://thingsboard.cloud
+VITE_TB_WS_URL=wss://thingsboard.cloud
+VITE_TB_USERNAME=tu_usuario
+VITE_TB_PASSWORD=tu_password
+# Dispositivos disponibles en el selector de la navbar
+VITE_TB_DEVICE_NORMAL=<device-id>
+VITE_TB_DEVICE_AISLADA=<device-id>
+VITE_TB_DEVICE_MAYOR=<device-id>
 ```
 
-### 3. Instalación de dependencias y ejecución
+### 3. Instalación y ejecución
 
 ```bash
-# Instalar dependencias
 npm install
-
-# Iniciar entorno de producción / desarrollo
-npm run dev
+npm run dev     # desarrollo
+npm run build   # verificación de tipos + build de producción
+npm run lint    # ESLint
 ```
 
 El panel estará accesible en `http://localhost:5173`.
@@ -67,23 +72,15 @@ El panel estará accesible en `http://localhost:5173`.
 ```
 .
 ├── src/
-│   ├── components/     # Componentes modulares de la interfaz gráfica
-│   ├── hooks/          # Conectores de infraestructura (WebSocket & ThingsBoard API)
-│   ├── types/          # Definiciones de dominio y tipos de datos TypeScript
-│   ├── constants/      # Mapeos de UI y constantes de negocio
-│   ├── App.tsx         # Layout principal del dashboard
-│   └── main.tsx        # Punto de entrada de la aplicación React
-├── public/             # Recursos estáticos de la plataforma
-├── tailwind.config.js  # Sistema de diseño (Dark Theme & Cyan accents)
-└── package.json        # Gestión de dependencias y scripts de compilación
+│   ├── components/     # Componentes modulares (Header, Banner, LiveMonitor, ...)
+│   ├── hooks/          # Conector de ThingsBoard (API + WebSocket)
+│   ├── icons/          # Íconos de línea accesibles
+│   ├── types/          # Tipos del payload oficial del dispositivo
+│   ├── utils/          # Formato local de datos y estados clínicos
+│   ├── styles/         # Tokens de diseño, tonos semánticos y tarjetas base
+│   ├── pages/          # Composición del dashboard
+│   └── main.tsx        # Punto de entrada
 ```
-
----
-
-## 🔒 Seguridad y Rendimiento
-
-* **Conexiones Cifradas:** Comunicación segura mediante WebSockets con TLS (WSS).
-* **Rendimiento de Renderizado:** Memorización de componentes para procesamiento eficiente de flujos continuos de datos a alta frecuencia.
 
 ---
 
