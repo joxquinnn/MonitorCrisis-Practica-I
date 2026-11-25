@@ -1,95 +1,78 @@
-export type SymptomKey =
-  | 'palpitaciones'
-  | 'resequedadBoca'
-  | 'faltaAire'
-  | 'necesidadCaminar';
+/**
+ * Tipos del payload OFICIAL recibido desde ThingsBoard.
+ *
+ * La UI sólo puede renderizar información que exista explícitamente en este
+ * esquema. Si un campo llega ausente, `null` o vacío, se representa como
+ * `null` y la interfaz muestra "Sin datos disponibles" / "Desconectado".
+ */
 
-export type LiveState = 'stable' | 'evaluating' | 'crisis';
-export type RangeKey = '24h' | '7d' | '30d' | 'custom';
-export type Level = 'low' | 'medium' | 'high';
-export type Tone = 'ok' | 'warn' | 'danger' | 'neutral';
-export type SymptomView = 'bar' | 'donut';
-export type TrendDirection = 'up' | 'down' | 'flat';
+/** Bloque `dispositivo`. */
+export interface DevicePayload {
+  /** `true`/`false` o texto libre ("conectado"/"desconectado"). */
+  estado_conexion: boolean | string | null;
+  /** Nivel de batería en porcentaje (0-100). */
+  nivel_bateria_porcentaje: number | null;
+  /** Marca de tiempo ISO de la última sincronización recibida. */
+  ultima_sincronizacion: string | null;
+}
 
-/** Escenario de simulación seleccionable en el navbar. */
+/** Bloque `monitoreo_tiempo_real`. */
+export interface LiveMonitorPayload {
+  /** Estado actual informado por el dispositivo (ej. "Alerta"). */
+  estado_actual: string | null;
+  /** Gravedad actual en porcentaje (0-100). */
+  gravedad_actual_porcentaje: number | null;
+  /** Patrón motriz detectado (ej. "AGITACION"). */
+  patron_motriz_actual: string | null;
+  /** `false` ⇒ alerta pendiente de atención. */
+  alerta_atendida: boolean | null;
+}
+
+/** Bloque `estadisticas_agregadas.alertas`. */
+export interface AlertsSummaryPayload {
+  /** Total de alertas del rango de fecha consultado por la API. */
+  total_rango_fecha: number | null;
+  /** Variación respecto al periodo anterior (ej. 4 → "+4"). */
+  variacion_periodo_anterior: number | null;
+  /** Marca de tiempo ISO de la última alerta registrada. */
+  ultima_alerta_registrada: string | null;
+}
+
+/** Síntoma predominante informado por la API. */
+export interface MostFrequentSymptomPayload {
+  nombre: string | null;
+  registros: number | null;
+  porcentaje_incidencia: number | null;
+}
+
+/** Manifestación recurrente informada por la API. */
+export interface RecurrentManifestationPayload {
+  sintoma: string | null;
+  frecuencia: number | null;
+  porcentaje: number | null;
+}
+
+/** Bloque `estadisticas_agregadas.sintomas`. */
+export interface SymptomsSummaryPayload {
+  mas_frecuente: MostFrequentSymptomPayload | null;
+  manifestaciones_recurrentes: RecurrentManifestationPayload[];
+}
+
+/** Bloque `estadisticas_agregadas`. */
+export interface AggregatedStatsPayload {
+  alertas: AlertsSummaryPayload | null;
+  sintomas: SymptomsSummaryPayload | null;
+}
+
+/** Payload completo normalizado. */
+export interface DashboardPayload {
+  dispositivo: DevicePayload | null;
+  monitoreo_tiempo_real: LiveMonitorPayload | null;
+  estadisticas_agregadas: AggregatedStatsPayload | null;
+}
+
+/** Dispositivo seleccionable desde la navbar (configurado por entorno). */
 export interface DeviceScenario {
   id: string;
   label: string;
-}
-
-export interface DeviceStatus {
-  batteryPercent: number;
-  mqttConnected: boolean;
-  lastSyncISO: string;
-}
-
-export interface SymptomData {
-  key: SymptomKey;
-  label: string;
-  count: number;
-}
-
-/** Una evaluación (test) respondida en el dispositivo. */
-export interface Evaluation {
-  id: string;
-  timestampISO: string;
-  yesCount: number;
-  totalQuestions: number;
-  symptoms: SymptomKey[];
-}
-
-export interface CrisisAlert {
-  id: string;
-  timestampISO: string;
-  severityPercent: number;
-  symptoms: SymptomKey[];
-  attended: boolean;
-}
-
-export interface LiveStatus {
-  state: LiveState;
-  yesCount: number;
-  totalQuestions: number;
-  updatedAtISO: string;
-}
-
-export interface MockData {
-  childName: string;
-  device: DeviceStatus;
-  live: LiveStatus;
-  evaluations: Evaluation[];
-  alerts: CrisisAlert[];
-}
-
-export interface HistoryPoint {
-  label: string;
-  yes: number;
-}
-
-export interface HourPoint {
-  hour: string;
-  average: number;
-}
-
-export interface PeakHour {
-  hour: number;
-  average: number;
-}
-
-/** Datos ya filtrados y agregados para el rango de fechas seleccionado. */
-export interface DerivedRangeData {
-  alertsNow: number;
-  alertsPrev: number;
-  symptoms: SymptomData[];
-  symptomsTotal: number;
-  history: HistoryPoint[];
-  hourly: HourPoint[];
-  peak: PeakHour | undefined;
-  evaluations: Evaluation[];
-}
-
-export interface DeviceRisk {
-  tone: Tone;
-  label: string;
-  detail: string;
 }

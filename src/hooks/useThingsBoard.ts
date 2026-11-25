@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ALERT_THRESHOLD_PERCENT, TOTAL_QUESTIONS } from '../constants/dashboard.constants';
 import type {
-  CrisisAlert,
-  Evaluation,
-  LiveState,
-  LiveStatus,
-  MockData,
-  SymptomKey,
+  AggregatedStatsPayload,
+  AlertsSummaryPayload,
+  DashboardPayload,
+  DevicePayload,
+  LiveMonitorPayload,
+  MostFrequentSymptomPayload,
+  RecurrentManifestationPayload,
+  SymptomsSummaryPayload,
 } from '../types/dashboard.types';
 
 const TB_HTTP_BASE = import.meta.env.VITE_TB_URL ?? 'https://thingsboard.cloud';
@@ -16,58 +17,18 @@ const RECONNECT_MIN_DELAY = 1_000;
 const RECONNECT_MAX_DELAY = 30_000;
 const SUBSCRIBE_CMD_ID = 1;
 
-const SYMPTOM_ALIASES: Record<string, SymptomKey> = {
-  palpitaciones: 'palpitaciones',
-  palpitacion: 'palpitaciones',
-  palpitacioncardiaco: 'palpitaciones',
-  resequedadboca: 'resequedadBoca',
-  boca: 'resequedadBoca',
-  resequedad: 'resequedadBoca',
-  faltaaire: 'faltaAire',
-  aire: 'faltaAire',
-  necesidadcaminar: 'necesidadCaminar',
-  caminar: 'necesidadCaminar',
-  caminarnecesidad: 'necesidadCaminar',
-};
-
-const LIVE_ALIASES: Record<string, LiveState> = {
-  stable: 'stable',
-  estable: 'stable',
-  tranquilo: 'stable',
-  normal: 'stable',
-  evaluating: 'evaluating',
-  evaluando: 'evaluating',
-  evaluacion: 'evaluating',
-  crisis: 'crisis',
-  alerta: 'crisis',
-  emergency: 'crisis',
-  alertacritica: 'crisis', // Agregado para el script de Crisis Mayor
-};
-
-/** Estado inicial para que la UI pueda pintarse mientras llegan los primeros datos. */
-function emptyData(childName: string): MockData {
-  const now = new Date().toISOString();
-  return {
-    childName,
-    device: { batteryPercent: 0, mqttConnected: false, lastSyncISO: now },
-    live: { state: 'stable', yesCount: 0, totalQuestions: TOTAL_QUESTIONS, updatedAtISO: now },
-    evaluations: [],
-    alerts: [],
-  };
-}
+/* ------------------------------------------------------------------ *
+ * Utilidades de desempaquetado (ThingsBoard serializa objetos a JSON)
+ * ------------------------------------------------------------------ */
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-/**
-- ThingsBoard serializa los payloads como strings JSON cuando el valor es un
-- objeto. Este helper intenta desempaquetarlos de forma tolerante.
- */
+/** Desenvuelve objetos/arrays serializados por ThingsBoard. */
 function unwrap(value: unknown): Record<string, unknown> | null {
   if (value == null) return null;
 
-  // Manejar el formato de arreglo doble de ThingsBoard: [[timestamp, "json_string"]]
   if (Array.isArray(value)) {
     if (value.length > 0 && Array.isArray(value[0]) && value[0].length > 1) {
       return unwrap(value[0][1]);
@@ -88,24 +49,16 @@ function unwrap(value: unknown): Record<string, unknown> | null {
   return null;
 }
 
-function pick<T = unknown>(source: Record<string, unknown> | null, keys: string[]): T | undefined {
-  if (!source) return undefined;
-  for (const key of keys) {
-    if (source[key] !== undefined && source[key] !== null) return source[key] as T;
-  }
-  return undefined;
-}
-
-function toNumber(value: unknown, fallback = 0): number {
+function toNumber(value: unknown): number | null {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (typeof value === 'string') {
+  if (typeof value === 'string' && value.trim() !== '') {
     const parsed = Number(value.replace(',', '.'));
     if (Number.isFinite(parsed)) return parsed;
   }
-  return fallback;
+  return null;
 }
 
-function toBoolean(value: unknown, fallback = false): boolean {
+function toBoolean(value: unknown): boolean | null {
   if (typeof value === 'boolean') return value;
   if (typeof value === 'number') return value !== 0;
   if (typeof value === 'string') {
@@ -113,199 +66,144 @@ function toBoolean(value: unknown, fallback = false): boolean {
     if (['true', '1', 'yes', 'si', 'sí', 'connected', 'online', 'conectado'].includes(normalized)) return true;
     if (['false', '0', 'no', 'disconnected', 'offline', 'desconectado'].includes(normalized)) return false;
   }
-  return fallback;
+  return null;
 }
 
-function toIsoString(value: unknown, fallback = new Date().toISOString()): string {
+function toText(value: unknown): string | null {
+  if (typeof value === 'string' && value.trim() !== '') return value.trim();
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  return null;
+}
+
+function toIsoText(value: unknown): string | null {
   if (typeof value === 'number' && Number.isFinite(value)) {
     return new Date(value < 1e12 ? value * 1000 : value).toISOString();
   }
-  if (typeof value === 'string' && value.trim()) {
+  if (typeof value === 'string' && value.trim() !== '') {
     const date = new Date(value);
-    if (!Number.isNaN(date.getTime())) return date.toISOString();
+    return Number.isNaN(date.getTime()) ? value.trim() : date.toISOString();
   }
-  return fallback;
+  return null;
 }
 
-function toSymptomKey(value: unknown): SymptomKey | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '');
-  return SYMPTOM_ALIASES[normalized] ?? null;
-}
+/* ------------------------------------------------------------------ *
+ * Parseo estricto del payload oficial
+ * ------------------------------------------------------------------ */
 
-function toSymptomKeys(value: unknown): SymptomKey[] {
-  const list = Array.isArray(value) ? value : typeof value === 'string' ? value.split(/[,;|]/) : [];
-  const keys = list
-    .map(toSymptomKey)
-    .filter((key): key is SymptomKey => key !== null);
-  return [...new Set(keys)];
-}
-
-function toLiveState(value: unknown, fallback: LiveState = 'stable'): LiveState {
-  if (typeof value !== 'string') return fallback;
-  const normalized = value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '');
-  return LIVE_ALIASES[normalized] ?? fallback;
-}
-
-function parseEvaluations(raw: unknown): Evaluation[] {
-  const list = Array.isArray(raw) ? raw : [];
-  return list
-    .map((item, index): Evaluation | null => {
-      const record = unwrap(item);
-      if (!record) return null;
-      const totalQuestions = toNumber(
-        pick(record, ['total_preguntas', 'totalQuestions', 'total_preguntas_totales']),
-        TOTAL_QUESTIONS,
-      );
-      const yesCount = toNumber(
-        pick(record, ['respuestas_si', 'yesCount', 'si', 'respuestas_afirmativas']),
-        0,
-      );
-      const timestampISO = toIsoString(
-        pick(record, ['timestampISO', 'timestamp', 'fecha', 'hora', 'ts']),
-      );
-      return {
-        id: String(pick(record, ['id', '_id', 'evaluacion_id']) ?? `tb-${index}-${timestampISO}`),
-        timestampISO,
-        yesCount,
-        totalQuestions,
-        symptoms: toSymptomKeys(pick(record, ['symptoms', 'sintomas', 'sintomas_respondidos'])),
-      };
-    })
-    .filter((evaluation): evaluation is Evaluation => evaluation !== null)
-    .sort((a, b) => a.timestampISO.localeCompare(b.timestampISO));
-}
-
-/** Extrae el estado unificado a partir del bloque `data` recibido por el WebSocket. */
-function buildState(
-  payload: Record<string, unknown>,
-  previous: MockData,
-  fallbackName: string,
-): MockData {
-  const root = unwrap(pick(payload, ['data'])) ?? payload;
-  const dispositivo = unwrap(pick(root, ['dispositivo', 'device']));
-  const monitoreo = unwrap(pick(root, ['monitoreo_tiempo_real', 'monitoreo', 'live']));
-  const estadisticas = unwrap(pick(root, ['estadisticas_agregadas', 'estadisticas', 'stats'])) ?? {};
-
-  const nombre = pick<string>(dispositivo, ['nombre', 'name', 'nombre_nino', 'childName']);
-  const childName = nombre ?? previous.childName ?? fallbackName;
-
-  const batteryPercent = toNumber(
-    pick(dispositivo, ['bateria', 'battery', 'batteryPercent', 'bateria_porcentaje', 'nivel_bateria_porcentaje']),
-    previous.device.batteryPercent,
-  );
-  const mqttConnected = toBoolean(
-    pick(dispositivo, ['mqtt_conectado', 'mqttConnected', 'conectado', 'connected', 'estado_conexion']),
-    previous.device.mqttConnected,
-  );
-  const lastSyncISO = toIsoString(
-    pick(dispositivo, ['ultima_sincronizacion', 'lastSyncISO', 'last_sync', 'updated']),
-    previous.device.lastSyncISO,
-  );
-
-  const totalQuestions = toNumber(
-    pick(monitoreo, ['total_preguntas', 'totalQuestions']),
-    previous.live.totalQuestions || TOTAL_QUESTIONS,
-  );
-
-  // El script de crisis mayor manda porcentaje directo. Lo traducimos a respuestas "sí".
-  const gravedadPorcentaje = pick(monitoreo, ['gravedad_actual_porcentaje', 'gravedad_porcentaje']);
-  
-  const yesCount = gravedadPorcentaje !== undefined 
-    ? Math.round((toNumber(gravedadPorcentaje) / 100) * totalQuestions)
-    : toNumber(pick(monitoreo, ['respuestas_si', 'yesCount', 'si']), previous.live.yesCount);
-
-  const live: LiveStatus = {
-    state: toLiveState(pick(monitoreo, ['estado', 'state', 'estado_actual']), previous.live.state),
-    yesCount,
-    totalQuestions,
-    updatedAtISO: toIsoString(
-      pick(monitoreo, ['actualizado', 'updatedAtISO', 'updated', 'timestamp']),
-      previous.live.updatedAtISO,
-    ),
-  };
-
-  // Extraer síntomas recurrentes si vienen en el formato agrupado (Script Crisis Mayor)
-  const sintomasObj = unwrap(pick(estadisticas, ['sintomas']));
-  let recurrentSymptoms: SymptomKey[] = [];
-  if (sintomasObj && Array.isArray(sintomasObj.manifestaciones_recurrentes)) {
-    recurrentSymptoms = toSymptomKeys(
-      sintomasObj.manifestaciones_recurrentes.map((m: Record<string, unknown>) => m.sintoma)
-    );
-  }
-
- // Evaluaciones: Intentamos leer un historial explícito enviado por el script
-  const evaluationsRaw = pick(estadisticas, ['evaluaciones', 'evaluacion', 'evaluations']);
-  const evaluations: Evaluation[] = evaluationsRaw !== undefined 
-    ? parseEvaluations(evaluationsRaw) 
-    : [...previous.evaluations];
-
-  // Si el script no envía un historial, acumulamos el dato en vivo actual para armar el gráfico localmente
-  if (evaluationsRaw === undefined) {
-    const lastEval = evaluations[evaluations.length - 1];
-    // Solo agregamos un nuevo punto si el timestamp es diferente al último (para no duplicar)
-    if (!lastEval || lastEval.timestampISO !== live.updatedAtISO) {
-      evaluations.push({
-        id: `tb-eval-local-${Date.now()}`,
-        timestampISO: live.updatedAtISO,
-        yesCount: live.yesCount,
-        totalQuestions: live.totalQuestions,
-        symptoms: recurrentSymptoms,
-      });
-
-      // Mantenemos solo los últimos 15 puntos para que el gráfico no se apriete demasiado
-      if (evaluations.length > 15) {
-        evaluations.shift();
-      }
-    }
-  }
-
-  // Alertas
-  const alertasObj = unwrap(pick(estadisticas, ['alertas']));
-  let alerts: CrisisAlert[] = previous.alerts; // Usamos explícitamente el tipo CrisisAlert importado
-  
-  if (alertasObj && typeof alertasObj.total_rango_fecha === 'number') {
-    // Si viene el total agregado, generamos alertas simuladas para reflejarlas en la UI
-    const total = alertasObj.total_rango_fecha;
-    const ts = toIsoString(alertasObj.ultima_alerta_registrada, live.updatedAtISO);
-    alerts = Array.from({ length: total }).map((_, i) => ({
-      id: `tb-alert-agg-${i}-${ts}`,
-      timestampISO: ts,
-      severityPercent: toNumber(gravedadPorcentaje, 95),
-      symptoms: recurrentSymptoms,
-      attended: false
-    }));
-  } else if (evaluations.length > 0) {
-    // Fallback: derivar alertas de las evaluaciones críticas
-    alerts = evaluations
-      .filter((evaluation) => (evaluation.yesCount / evaluation.totalQuestions) * 100 >= ALERT_THRESHOLD_PERCENT)
-      .map((evaluation) => ({
-        id: `tb-alert-${evaluation.id}`,
-        timestampISO: evaluation.timestampISO,
-        severityPercent: (evaluation.yesCount / evaluation.totalQuestions) * 100,
-        symptoms: evaluation.symptoms,
-        attended: false,
-      }));
-  }
-
+function parseDispositivo(raw: unknown): DevicePayload | null {
+  const record = unwrap(raw);
+  if (!record) return null;
   return {
-    childName: childName || fallbackName,
-    device: { batteryPercent, mqttConnected, lastSyncISO },
-    live,
-    evaluations,
-    alerts,
+    estado_conexion:
+      record.estado_conexion !== undefined ? toBoolean(record.estado_conexion) ?? toText(record.estado_conexion) : null,
+    nivel_bateria_porcentaje:
+      record.nivel_bateria_porcentaje !== undefined ? toNumber(record.nivel_bateria_porcentaje) : null,
+    ultima_sincronizacion:
+      record.ultima_sincronizacion !== undefined ? toIsoText(record.ultima_sincronizacion) : null,
   };
 }
+
+function parseMonitoreo(raw: unknown): LiveMonitorPayload | null {
+  const record = unwrap(raw);
+  if (!record) return null;
+  return {
+    estado_actual: record.estado_actual !== undefined ? toText(record.estado_actual) : null,
+    gravedad_actual_porcentaje:
+      record.gravedad_actual_porcentaje !== undefined ? toNumber(record.gravedad_actual_porcentaje) : null,
+    patron_motriz_actual: record.patron_motriz_actual !== undefined ? toText(record.patron_motriz_actual) : null,
+    alerta_atendida: record.alerta_atendida !== undefined ? toBoolean(record.alerta_atendida) : null,
+  };
+}
+
+function parseAlertas(raw: unknown): AlertsSummaryPayload | null {
+  const record = unwrap(raw);
+  if (!record) return null;
+  return {
+    total_rango_fecha: record.total_rango_fecha !== undefined ? toNumber(record.total_rango_fecha) : null,
+    variacion_periodo_anterior:
+      record.variacion_periodo_anterior !== undefined ? toNumber(record.variacion_periodo_anterior) : null,
+    ultima_alerta_registrada:
+      record.ultima_alerta_registrada !== undefined ? toIsoText(record.ultima_alerta_registrada) : null,
+  };
+}
+
+function parseMasFrecuente(raw: unknown): MostFrequentSymptomPayload | null {
+  const record = unwrap(raw);
+  if (!record) return null;
+  return {
+    nombre: record.nombre !== undefined ? toText(record.nombre) : null,
+    registros: record.registros !== undefined ? toNumber(record.registros) : null,
+    porcentaje_incidencia:
+      record.porcentaje_incidencia !== undefined ? toNumber(record.porcentaje_incidencia) : null,
+  };
+}
+
+function parseManifestacion(raw: unknown, index: number): RecurrentManifestationPayload | null {
+  const record = unwrap(raw);
+  if (!record) return null;
+  return {
+    sintoma: record.sintoma !== undefined ? toText(record.sintoma) : toText(record[`sintoma_${index}`]),
+    frecuencia: record.frecuencia !== undefined ? toNumber(record.frecuencia) : null,
+    porcentaje: record.porcentaje !== undefined ? toNumber(record.porcentaje) : null,
+  };
+}
+
+function parseSintomas(raw: unknown): SymptomsSummaryPayload | null {
+  const record = unwrap(raw);
+  if (!record) return null;
+  const recurrentRaw = Array.isArray(record.manifestaciones_recurrentes)
+    ? record.manifestaciones_recurrentes
+    : [];
+  return {
+    mas_frecuente: record.mas_frecuente !== undefined ? parseMasFrecuente(record.mas_frecuente) : null,
+    manifestaciones_recurrentes: recurrentRaw
+      .map((item, index) => parseManifestacion(item, index))
+      .filter((item): item is RecurrentManifestationPayload => item !== null),
+  };
+}
+
+function parseEstadisticas(raw: unknown): AggregatedStatsPayload | null {
+  const record = unwrap(raw);
+  if (!record) return null;
+  return {
+    alertas: record.alertas !== undefined ? parseAlertas(record.alertas) : null,
+    sintomas: record.sintomas !== undefined ? parseSintomas(record.sintomas) : null,
+  };
+}
+
+/** Normaliza el mensaje recibido al payload oficial del dashboard. */
+export function parseDashboardPayload(raw: unknown): DashboardPayload | null {
+  const envelope = unwrap(raw);
+  if (!envelope) return null;
+
+  const root = unwrap(envelope.data) ?? envelope;
+  const dispositivo = parseDispositivo(root.dispositivo);
+  const monitoreo = parseMonitoreo(root.monitoreo_tiempo_real);
+  const estadisticas = parseEstadisticas(root.estadisticas_agregadas);
+
+  if (!dispositivo && !monitoreo && !estadisticas) return null;
+
+  return { dispositivo, monitoreo_tiempo_real: monitoreo, estadisticas_agregadas: estadisticas };
+}
+
+/**
+ * ThingsBoard envía sólo las claves que cambiaron: se fusiona con el estado
+ * previo para no borrar tarjetas cuando llega una actualización parcial.
+ */
+function mergePayload(prev: DashboardPayload | null, next: DashboardPayload): DashboardPayload {
+  return {
+    dispositivo: next.dispositivo ?? prev?.dispositivo ?? null,
+    monitoreo_tiempo_real: next.monitoreo_tiempo_real ?? prev?.monitoreo_tiempo_real ?? null,
+    estadisticas_agregadas: {
+      alertas: next.estadisticas_agregadas?.alertas ?? prev?.estadisticas_agregadas?.alertas ?? null,
+      sintomas: next.estadisticas_agregadas?.sintomas ?? prev?.estadisticas_agregadas?.sintomas ?? null,
+    },
+  };
+}
+
+/* ------------------------------------------------------------------ *
+ * Conexión ThingsBoard
+ * ------------------------------------------------------------------ */
 
 async function login(username: string, password: string): Promise<string> {
   const response = await fetch(`${TB_HTTP_BASE}/api/auth/login`, {
@@ -325,22 +223,31 @@ async function login(username: string, password: string): Promise<string> {
 }
 
 export interface UseThingsBoardResult {
-  data: MockData | null;
+  payload: DashboardPayload | null;
   isConnected: boolean;
   error: string | null;
+  receivedAt: string | null;
 }
 
+interface ConnectionState extends UseThingsBoardResult {
+  entityId: string | null | undefined;
+}
+
+const INITIAL_STATE: ConnectionState = {
+  entityId: null,
+  payload: null,
+  isConnected: false,
+  error: null,
+  receivedAt: null,
+};
+
 export function useThingsBoard(entityId: string | null | undefined): UseThingsBoardResult {
-  const [data, setData] = useState<MockData | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [state, setState] = useState<ConnectionState>(INITIAL_STATE);
 
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const attemptRef = useRef(0);
   const disposedRef = useRef(false);
-
-  const fallbackName = useMemo(() => 'Dispositivo', []);
 
   const configError = useMemo(() => {
     if (!entityId) return 'Falta el entityId del dispositivo';
@@ -353,6 +260,7 @@ export function useThingsBoard(entityId: string | null | undefined): UseThingsBo
   useEffect(() => {
     disposedRef.current = false;
     let cancelled = false;
+    attemptRef.current = 0;
 
     if (configError) {
       return undefined;
@@ -408,34 +316,62 @@ export function useThingsBoard(entityId: string | null | undefined): UseThingsBo
         socketRef.current = socket;
 
         socket.onopen = () => {
+          if (cancelled || disposedRef.current) return;
           attemptRef.current = 0;
-          setIsConnected(true);
-          setError(null);
+          setState((prev) => ({
+            ...(prev.entityId === entityId ? prev : INITIAL_STATE),
+            entityId,
+            isConnected: true,
+            error: null,
+          }));
           subscribe(socket);
         };
 
         socket.onmessage = (event: MessageEvent<string>) => {
+          if (cancelled || disposedRef.current) return;
           try {
             const parsed = JSON.parse(event.data as string) as Record<string, unknown>;
-            const payload = unwrap(parsed) ?? {};
-            setData((previous) => buildState(payload, previous ?? emptyData(fallbackName), fallbackName));
+            const next = parseDashboardPayload(parsed);
+            if (next) {
+              setState((prev) => ({
+                ...(prev.entityId === entityId ? prev : INITIAL_STATE),
+                entityId,
+                payload: mergePayload(prev.entityId === entityId ? prev.payload : null, next),
+                receivedAt: new Date().toISOString(),
+              }));
+            }
           } catch {
             // Mensaje no interpretable: se ignora sin romper la conexión.
           }
         };
 
         socket.onerror = () => {
-          setError('Error en la conexión WebSocket con ThingsBoard');
+          if (cancelled || disposedRef.current) return;
+          setState((prev) => ({
+            ...(prev.entityId === entityId ? prev : INITIAL_STATE),
+            entityId,
+            error: 'Error en la conexión WebSocket con ThingsBoard',
+          }));
         };
 
         socket.onclose = () => {
-          setIsConnected(false);
+          if (cancelled || disposedRef.current) return;
+          setState((prev) => ({
+            ...(prev.entityId === entityId ? prev : INITIAL_STATE),
+            entityId,
+            isConnected: false,
+          }));
           socketRef.current = null;
           scheduleReconnect();
         };
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'No se pudo conectar con ThingsBoard');
-        setIsConnected(false);
+        if (cancelled || disposedRef.current) return;
+        setState((prev) => ({
+          ...(prev.entityId === entityId ? prev : INITIAL_STATE),
+          entityId,
+          error: err instanceof Error ? err.message : 'No se pudo conectar con ThingsBoard',
+          isConnected: false,
+        }));
         scheduleReconnect();
       }
     };
@@ -458,9 +394,16 @@ export function useThingsBoard(entityId: string | null | undefined): UseThingsBo
         }
       }
     };
-  }, [entityId, configError, fallbackName]);
+  }, [entityId, configError]);
 
-  return { data, isConnected, error: error ?? configError };
+  const isCurrentEntity = state.entityId === entityId;
+
+  return {
+    payload: isCurrentEntity ? state.payload : null,
+    isConnected: isCurrentEntity ? state.isConnected : false,
+    error: (isCurrentEntity ? state.error : null) ?? configError,
+    receivedAt: isCurrentEntity ? state.receivedAt : null,
+  };
 }
 
 export default useThingsBoard;
