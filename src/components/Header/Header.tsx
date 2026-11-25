@@ -1,123 +1,118 @@
 import type { ReactElement } from 'react';
-import { APP_NAME, RANGE_OPTIONS, REFERENCE_NOW } from '../../constants/dashboard.constants';
 import { BatteryIcon } from '../../icons/BatteryIcon';
-import type { DeviceScenario, DeviceStatus, RangeKey } from '../../types/dashboard.types';
-import { toInputDate } from '../../utils/date.utils';
+import { ClockIcon } from '../../icons/ClockIcon';
+import type { DeviceScenario, DevicePayload } from '../../types/dashboard.types';
+import { resolveConnection } from '../../utils/clinical.utils';
+import { formatLocalDateTime, formatPercent } from '../../utils/format.utils';
+import utilStyles from '../../styles/Utils.module.css';
 import styles from './Header.module.css';
 
 interface HeaderProps {
-  device: DeviceStatus;
+  dispositivo: DevicePayload | null;
   isConnected: boolean;
-  range: RangeKey;
-  onRangeChange: (range: RangeKey) => void;
-  customFrom: string;
-  onCustomFromChange: (date: string) => void;
-  customTo: string;
-  onCustomToChange: (date: string) => void;
-  scenario: string;
   scenarios: DeviceScenario[];
+  activeDeviceId: string;
   onScenarioChange: (id: string) => void;
 }
 
-/** Navbar superior fija (glassmorphism) con el grupo central de control del dashboard. */
+/**
+ * Navbar superior fija y translúcida: aplicación a la izquierda, estado del
+ * dispositivo al centro y selectores a la derecha.
+ */
 export function Header({
-  device,
+  dispositivo,
   isConnected,
-  range,
-  onRangeChange,
-  customFrom,
-  onCustomFromChange,
-  customTo,
-  onCustomToChange,
-  scenario,
   scenarios,
+  activeDeviceId,
   onScenarioChange,
 }: HeaderProps): ReactElement {
+  const connection = resolveConnection(dispositivo?.estado_conexion, isConnected);
+  const battery = formatPercent(dispositivo?.nivel_bateria_porcentaje ?? null);
+  const lastSync = formatLocalDateTime(dispositivo?.ultima_sincronizacion ?? null);
+
   return (
-    <nav className={styles.nav}>
-      <div className={styles.inner}>
+    <header className={styles.header}>
+      <nav className={styles.nav} aria-label="Barra principal">
         <div className={styles.brand}>
           <span className={styles.brandMark} aria-hidden="true" />
-          <span className={styles.brandName}>{APP_NAME}</span>
+          <span className={styles.brandName}>Vigía</span>
         </div>
 
-        <div className={styles.controls}>
-          <div className={styles.chip} title="Nivel de batería del dispositivo">
-            <span className={styles.chipIcon}>
-              <BatteryIcon percent={device.batteryPercent} />
+        <div className={styles.statusGroup} role="group" aria-label="Estado del dispositivo">
+          <p
+            className={`${styles.chip} ${connection.connected ? styles.chipOk : styles.chipOff}`}
+            role="status"
+          >
+            <span className={styles.chipIcon} aria-hidden="true">
+              {connection.connected ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12.5l4.5 4.5L19 7.5" />
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              )}
+            </span>
+            <span>{connection.label}</span>
+          </p>
+
+          <p className={styles.chip}>
+            <span className={styles.chipIcon} aria-hidden="true">
+              <BatteryIcon percent={dispositivo?.nivel_bateria_porcentaje ?? null} />
             </span>
             <span>
-              <span className={styles.srOnly}>Batería: </span>
-              {device.batteryPercent}%
+              <span className={styles.chipLabel}>Batería:</span>{' '}
+              <span className={styles.numValue}>{battery ?? 'Sin datos disponibles'}</span>
             </span>
-          </div>
+          </p>
 
-          <div className={`${styles.chip} ${isConnected ? styles.chipOn : styles.chipOff}`} role="status">
-            <span className={`${styles.led} ${isConnected ? styles.ledOn : styles.ledOff}`} aria-hidden="true" />
-            <span>{isConnected ? 'Conectado' : 'Desconectado'}</span>
-          </div>
+          <p className={styles.chip}>
+            <span className={styles.chipIcon} aria-hidden="true">
+              <ClockIcon size={18} />
+            </span>
+            <span>
+              <span className={styles.chipLabel}>Última sincronización:</span>{' '}
+              <span className={styles.numValue}>{lastSync ?? 'Sin datos disponibles'}</span>
+            </span>
+          </p>
+        </div>
 
-          <div className={styles.rangeGroup}>
-            <label htmlFor="range" className={styles.srOnly}>
-              Rango de fechas
-            </label>
+        <div className={styles.actions}>
+          <label className={styles.field} htmlFor="range-filter">
+            <span className={styles.fieldLabel}>Rango de fechas</span>
             <select
-              id="range"
+              id="range-filter"
               className={styles.select}
-              value={range}
-              onChange={(e) => onRangeChange(e.target.value as RangeKey)}
+              value="none"
+              disabled
+              title="Filtro no disponible: se muestra el período entregado por la API"
+              aria-describedby="range-filter-note"
             >
-              {RANGE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
+              <option value="none">No disponible</option>
+            </select>
+          </label>
+          <span className={utilStyles.srOnly} id="range-filter-note">
+            El filtro de rango no está disponible. Se muestra el período entregado por la API.
+          </span>
+
+          <label className={styles.field} htmlFor="device-select">
+            <span className={styles.fieldLabel}>Dispositivo</span>
+            <select
+              id="device-select"
+              className={styles.select}
+              value={activeDeviceId}
+              onChange={(event) => onScenarioChange(event.target.value)}
+            >
+              {scenarios.map((scenario) => (
+                <option key={scenario.id} value={scenario.id}>
+                  {scenario.label}
                 </option>
               ))}
             </select>
-
-            {range === 'custom' && (
-              <div className={styles.customRange}>
-                <label className={styles.dateField}>
-                  Desde
-                  <input
-                    type="date"
-                    value={customFrom}
-                    max={customTo}
-                    onChange={(e) => onCustomFromChange(e.target.value)}
-                  />
-                </label>
-                <label className={styles.dateField}>
-                  Hasta
-                  <input
-                    type="date"
-                    value={customTo}
-                    min={customFrom}
-                    max={toInputDate(REFERENCE_NOW)}
-                    onChange={(e) => onCustomToChange(e.target.value)}
-                  />
-                </label>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className={styles.scenario}>
-          <label htmlFor="scenario" className={styles.scenarioLabel}>
-            Escenario
           </label>
-          <select
-            id="scenario"
-            className={styles.select}
-            value={scenario}
-            onChange={(e) => onScenarioChange(e.target.value)}
-          >
-            {scenarios.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.label}
-              </option>
-            ))}
-          </select>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </header>
   );
 }

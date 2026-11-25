@@ -1,111 +1,147 @@
 import type { ReactElement } from 'react';
-import { LIVE_META } from '../../constants/dashboard.constants';
-import { StatusIcon } from '../../icons/StatusIcon';
-import type { CrisisAlert, LiveState, LiveStatus } from '../../types/dashboard.types';
-import { toneClass } from '../../utils/dashboard.utils';
-import { formatDateTime, formatTime } from '../../utils/date.utils';
-import toneStyles from '../../styles/tones.module.css';
+import { PatternIcon } from '../../icons/PatternIcon';
+import { StatusIcon, type ClinicalState } from '../../icons/StatusIcon';
+import type { LiveMonitorPayload } from '../../types/dashboard.types';
+import { isAlertState, resolveClinicalState, toneForState } from '../../utils/clinical.utils';
+import { formatPercent } from '../../utils/format.utils';
 import cardStyles from '../../styles/card.module.css';
+import toneStyles from '../../styles/tones.module.css';
+import utilStyles from '../../styles/Utils.module.css';
 import styles from './LiveMonitor.module.css';
 
 interface LiveMonitorProps {
-  childName: string;
-  live: LiveStatus;
-  lastAlert: CrisisAlert | undefined;
-  attendedAt: Date | null;
-  notifiedAt: Date | null;
-  onAttend: () => void;
-  onNotify: () => void;
-  onDemo: (state: LiveState) => void;
+  live: LiveMonitorPayload | null;
 }
 
-const LIVE_STATES: LiveState[] = ['stable', 'evaluating', 'crisis'];
-
-const DEMO_LABELS: Record<LiveState, string> = {
-  stable: 'Estable',
-  evaluating: 'Evaluando',
-  crisis: 'Crisis',
+const STATE_LABEL: Record<ClinicalState, string> = {
+  alerta: 'Alerta activa',
+  estable: 'Estado estable',
+  evaluando: 'Evaluación en curso',
+  desconocido: 'Estado informado por el dispositivo',
 };
 
-export function LiveMonitor({
-  childName,
-  live,
-  lastAlert,
-  attendedAt,
-  notifiedAt,
-  onAttend,
-  onNotify,
-  onDemo,
-}: LiveMonitorProps): ReactElement {
-  const meta = LIVE_META[live.state];
-  const isCrisis = live.state === 'crisis';
+const svgProps = {
+  width: 18,
+  height: 18,
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 2.5,
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const,
+};
+
+/** Tarjeta Prioridad 1: estado actual, gravedad, patrón motriz y atención de la alerta. */
+export function LiveMonitor({ live }: LiveMonitorProps): ReactElement {
+  const state = resolveClinicalState(live?.estado_actual ?? null);
+  const tone = toneForState(state);
+  const attended = live?.alerta_atendida ?? null;
+  const pending = attended === false;
+  const emergency = isAlertState(live?.estado_actual ?? null) && pending;
+
+  const gravity = live?.gravedad_actual_porcentaje ?? null;
+  const gravityLabel = formatPercent(gravity);
+  const pattern = live?.patron_motriz_actual ?? null;
+  const estado = live?.estado_actual ?? null;
+
+  const attendedClass =
+    attended === null ? styles.attendedNone : pending ? styles.attendedPending : styles.attendedOk;
+  const attendedText =
+    attended === null ? 'Sin datos disponibles' : pending ? 'Pendiente de atención' : 'Atendida';
 
   return (
     <section
-      className={`${cardStyles.card} ${styles.live} ${toneClass(toneStyles, meta.tone)} ${
-        isCrisis ? styles.crisis : ''
-      }`}
+      className={`${cardStyles.card} ${styles.card} ${toneStyles[`tone_${tone}`]}`}
       aria-labelledby="live-title"
     >
-      <div className={styles.main}>
-        <p className={styles.eyebrow} id="live-title">
-          Monitoreo directo · {childName}
-        </p>
+      {/* Región persistente: el anuncio sólo ocurre cuando cambia su contenido. */}
+      <p className={utilStyles.srOnly} role="alert">
+        {emergency ? 'Alerta activa pendiente de atención' : ''}
+      </p>
 
-        {/* role="alert" anuncia el cambio a lectores de pantalla sólo en crisis */}
-        <div role={isCrisis ? 'alert' : 'status'} className={styles.statusRow}>
-          <span className={styles.icon}>
-            <StatusIcon state={live.state} />
+      <div className={styles.head}>
+        <h3 id="live-title" className={styles.title}>
+          Monitoreo en tiempo real
+        </h3>
+        <span className={styles.badge}>
+          <span className={styles.badgeIcon} aria-hidden="true">
+            <StatusIcon state={state} />
           </span>
-          <div>
-            <p className={styles.statusTitle}>{meta.title}</p>
-            <p className={styles.description}>{meta.description}</p>
-          </div>
-        </div>
+          {STATE_LABEL[state]}
+        </span>
+      </div>
 
-        <div className={styles.actions}>
-          <button
-            type="button"
-            className={`${styles.btn} ${styles.btnPrimary}`}
-            onClick={onAttend}
-            disabled={!isCrisis}
-          >
-            Marcar alerta como atendida
-          </button>
-          <button type="button" className={`${styles.btn} ${styles.btnSecondary}`} onClick={onNotify}>
-            Notificar al tutor
-          </button>
+      <div className={styles.statusBlock} role="status">
+        <span className={styles.stateIcon} aria-hidden="true">
+          <StatusIcon state={state} />
+        </span>
+        <div className={styles.stateText}>
+          <p className={styles.stateLabel}>Estado actual</p>
+          <p className={`${styles.stateValue} ${estado ? '' : styles.noData}`}>
+            {estado ?? 'Sin datos disponibles'}
+          </p>
         </div>
-
-        <div className={styles.feedback} aria-live="polite">
-          {attendedAt && <p>Alerta marcada como atendida a las {formatTime(attendedAt)}.</p>}
-          {notifiedAt && <p>Tutor notificado a las {formatTime(notifiedAt)}.</p>}
-        </div>
-
-        <p className={styles.meta}>
-          Actualizado a las {formatTime(new Date(live.updatedAtISO))}
-          {lastAlert && (
-            <>
-              {' '}
-              · Última alerta registrada: {formatDateTime(lastAlert.timestampISO)}
-              {lastAlert.attended ? ' (atendida)' : ' (sin atender)'}
-            </>
-          )}
+        <p className={`${styles.attended} ${attendedClass}`}>
+          <span className={styles.attendedIcon} aria-hidden="true">
+            {attended === null ? (
+              <svg {...svgProps}>
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 8v5" />
+                <path d="M12 16h.01" />
+              </svg>
+            ) : pending ? (
+              <svg {...svgProps}>
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v5.5" />
+                <path d="M12 16h.01" />
+              </svg>
+            ) : (
+              <svg {...svgProps}>
+                <circle cx="12" cy="12" r="9" />
+                <path d="M8 12.5l2.7 2.7L16 9.5" />
+              </svg>
+            )}
+          </span>
+          {attendedText}
         </p>
+      </div>
 
-        <div className={styles.demo} role="group" aria-label="Vista de demostración del estado">
-          <span className={styles.demoLabel}>Vista de demostración</span>
-          {LIVE_STATES.map((state) => (
-            <button
-              key={state}
-              type="button"
-              className={`${styles.demoBtn} ${live.state === state ? styles.demoBtnActive : ''}`}
-              aria-pressed={live.state === state}
-              onClick={() => onDemo(state)}
+      <div className={styles.metrics}>
+        <div className={styles.metric}>
+          <p className={styles.metricLabel} id="gravity-label">
+            Gravedad actual
+          </p>
+          {gravity !== null ? (
+            <div
+              className={styles.progress}
+              role="progressbar"
+              aria-labelledby="gravity-label"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={gravity}
+              aria-valuetext={gravityLabel ?? undefined}
             >
-              {DEMO_LABELS[state]}
-            </button>
-          ))}
+              <span
+                className={styles.progressFill}
+                style={{ width: `${Math.max(0, Math.min(100, gravity))}%` }}
+              />
+            </div>
+          ) : null}
+          <p className={`${styles.metricValue} ${gravityLabel ? '' : styles.noData}`}>
+            {gravityLabel ?? 'Sin datos disponibles'}
+          </p>
+        </div>
+
+        <div className={styles.metric}>
+          <p className={styles.metricLabel}>
+            <span className={styles.metricIcon} aria-hidden="true">
+              <PatternIcon />
+            </span>
+            Patrón motriz actual
+          </p>
+          <p className={`${styles.patternValue} ${pattern ? '' : styles.noData}`}>
+            {pattern ?? 'Sin datos disponibles'}
+          </p>
         </div>
       </div>
     </section>
