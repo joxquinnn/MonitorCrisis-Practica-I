@@ -57,10 +57,10 @@ export default function Dashboard(): ReactElement {
           </p>
         )}
 
-        <section className={styles.section} aria-labelledby="sec-priority-1">
+        <section className={styles.section} aria-labelledby="sec-current">
           <div className={styles.sectionHead}>
-            <h2 className={styles.sectionTitle} id="sec-priority-1">
-              Estado actual y dispositivo
+            <h2 className={styles.sectionTitle} id="sec-current">
+              Estado actual
             </h2>
           </div>
           <div className={styles.gridPrimary}>
@@ -69,25 +69,19 @@ export default function Dashboard(): ReactElement {
           </div>
         </section>
 
-        <section className={styles.section} aria-labelledby="sec-priority-2">
+        <section className={styles.section} aria-labelledby="sec-summary">
           <div className={styles.sectionHead}>
-            <h2 className={styles.sectionTitle} id="sec-priority-2">
+            <h2 className={styles.sectionTitle} id="sec-summary">
               Resumen del período
             </h2>
           </div>
-          <div className={styles.gridPair}>
-            <AlertsSummary alertas={alertas} />
-            <TopSymptom masFrecuente={sintomas?.mas_frecuente ?? null} />
+          <div className={styles.gridSummary}>
+            <div className={styles.stack}>
+              <AlertsSummary alertas={alertas} />
+              <TopSymptom masFrecuente={sintomas?.mas_frecuente ?? null} />
+            </div>
+            <RecurrentManifestations manifestaciones={sintomas?.manifestaciones_recurrentes ?? []} />
           </div>
-        </section>
-
-        <section className={styles.section} aria-labelledby="sec-priority-3">
-          <div className={styles.sectionHead}>
-            <h2 className={styles.sectionTitle} id="sec-priority-3">
-              Análisis de síntomas
-            </h2>
-          </div>
-          <RecurrentManifestations manifestaciones={sintomas?.manifestaciones_recurrentes ?? []} />
         </section>
 
         <p className={styles.footnote}>Vigía · Datos provenientes del dispositivo seleccionado.</p>
