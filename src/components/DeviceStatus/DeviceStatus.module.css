@@ -1,25 +1,28 @@
 .card {
   display: flex;
   flex-direction: column;
-  gap: 18px;
 }
 
 .title {
-  margin: 0;
+  margin: 0 0 4px;
   font-family: var(--db-display);
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--db-ink);
 }
 
+/* Filas separadas por línea; se reparten la altura disponible de la tarjeta. */
 .row {
+  flex: 1;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 14px;
-  padding: 14px;
-  border-radius: var(--db-radius);
-  background: var(--db-surface-2);
-  border: 1px solid var(--db-line);
+  padding: 14px 0;
+  border-top: 1px solid var(--db-line-strong);
+}
+
+.title + .row {
+  border-top: 0;
 }
 
 .rowBody {
@@ -31,10 +34,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: var(--db-surface);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--db-surface-2);
   border: 1px solid var(--db-line);
   color: var(--db-brand);
   flex-shrink: 0;
@@ -72,20 +75,20 @@
   color: #b91c1c;
 }
 
-/* Riel neutro + relleno con color sólido (contraste >= 3:1). */
+/* Riel neutro + relleno sólido (contraste >= 3:1). */
 .progress {
   width: 100%;
-  height: 10px;
+  height: 8px;
   margin-top: 8px;
   border-radius: 999px;
   background: #e2e8f0;
-  border: 1px solid #cbd5e1;
   overflow: hidden;
 }
 
 .progressFill {
   display: block;
   height: 100%;
+  border-radius: 999px;
   background: var(--tone-fg);
   transition: width 0.4s ease;
 }
