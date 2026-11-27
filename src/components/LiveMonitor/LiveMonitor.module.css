@@ -1,68 +1,48 @@
 .card {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
   border-left: 6px solid var(--tone-fg);
 }
 
-.head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+/* Alerta activa sin atender: halo estático (sin animación). */
+.emergency {
+  box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.16), var(--db-shadow-card);
 }
 
 .title {
   margin: 0;
   font-family: var(--db-display);
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--db-ink);
 }
 
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: var(--tone-bg);
-  border: 1px solid var(--tone-solid);
-  color: var(--tone-fg);
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-.badgeIcon {
-  display: inline-flex;
-}
-
 .statusBlock {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 16px;
-  padding: 18px;
+  gap: 18px;
+  padding: 20px;
   border-radius: var(--db-radius);
   background: var(--tone-bg);
   border: 1px solid var(--tone-solid);
-}
-
-.stateText {
-  min-width: 0;
 }
 
 .stateIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 52px;
-  height: 52px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   background: var(--db-surface);
   border: 1px solid var(--tone-solid);
   color: var(--tone-fg);
+}
+
+.stateText {
+  min-width: 0;
 }
 
 .stateLabel {
@@ -77,10 +57,11 @@
 .stateValue {
   margin: 2px 0 0;
   font-family: var(--db-display);
-  font-size: clamp(1.3rem, 3vw, 1.9rem);
+  font-size: clamp(1.5rem, 3.2vw, 2.2rem);
   font-weight: 700;
   line-height: 1.15;
   color: var(--tone-fg);
+  overflow-wrap: anywhere;
 }
 
 .attended {
@@ -92,6 +73,7 @@
   border-radius: 999px;
   font-size: 0.88rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .attendedIcon {
@@ -119,14 +101,14 @@
 .metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  gap: 16px;
 }
 
 .metric {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 16px;
+  gap: 10px;
+  padding: 16px 18px;
   border-radius: var(--db-radius);
   background: var(--db-surface-2);
   border: 1px solid var(--db-line);
@@ -149,38 +131,72 @@
   color: var(--db-brand);
 }
 
-.metricValue {
+.patternValue {
+  flex: 1;
+  display: flex;
+  align-items: center;
   margin: 0;
   font-family: var(--db-display);
-  font-size: 2rem;
+  font-size: clamp(1.3rem, 2.6vw, 1.8rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--db-ink);
+  overflow-wrap: anywhere;
+}
+
+/* Medidor circular de gravedad (0–100 %). */
+.gaugeMetric {
+  align-items: flex-start;
+}
+
+.ringWrap {
+  position: relative;
+  align-self: center;
+  width: 128px;
+  height: 128px;
+}
+
+.ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ringTrack {
+  fill: none;
+  stroke: #e2e8f0;
+  stroke-width: 12;
+}
+
+.ringFill {
+  fill: none;
+  stroke: var(--tone-fg);
+  stroke-width: 12;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.ringValue {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  font-family: var(--db-display);
+  font-size: 1.7rem;
   font-weight: 700;
   color: var(--db-ink);
   font-variant-numeric: tabular-nums;
 }
 
-.patternValue {
-  margin: 0;
-  font-family: var(--db-display);
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--db-ink);
-}
-
-.progress {
-  width: 100%;
-  height: 12px;
-  border-radius: 999px;
-  background: #e2e8f0;
-  border: 1px solid #cbd5e1;
-  overflow: hidden;
-}
-
-.progressFill {
-  display: block;
-  height: 100%;
-  background: var(--db-brand);
-  transition: width 0.4s ease;
+.ringNoData {
+  padding: 0 22px;
+  text-align: center;
+  font-family: var(--db-font);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--db-muted);
 }
 
 /* Debe ir tras las clases de valor para imponerse. */
@@ -193,14 +209,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .progressFill {
+  .ringFill {
     transition: none;
   }
 }
 
 @media (max-width: 760px) {
   .statusBlock {
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto minmax(0, 1fr);
   }
 
   .attended {
