@@ -1,7 +1,7 @@
 .title {
-  margin: 0 0 18px;
+  margin: 0 0 14px;
   font-family: var(--db-display);
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--db-ink);
 }
@@ -9,7 +9,7 @@
 .total {
   margin: 0;
   font-family: var(--db-display);
-  font-size: clamp(2.6rem, 6vw, 3.4rem);
+  font-size: clamp(2.6rem, 5vw, 3.2rem);
   line-height: 1;
   font-weight: 700;
   color: var(--db-ink);
@@ -26,13 +26,13 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin: 16px 0 0;
-  padding: 7px 14px;
+  margin: 14px 0 0;
+  padding: 6px 12px;
   border-radius: 999px;
   background: var(--tone-bg);
   border: 1px solid var(--tone-solid);
   color: var(--tone-fg);
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 700;
 }
 
@@ -44,10 +44,10 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 18px 0 0;
-  padding-top: 16px;
+  margin: 16px 0 0;
+  padding-top: 14px;
   border-top: 1px solid var(--db-line-strong);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--db-ink);
 }
 
