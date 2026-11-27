@@ -1,24 +1,17 @@
 import type { ReactElement } from 'react';
 import { PatternIcon } from '../../icons/PatternIcon';
-import { StatusIcon, type ClinicalState } from '../../icons/StatusIcon';
+import { StatusIcon } from '../../icons/StatusIcon';
 import type { LiveMonitorPayload } from '../../types/dashboard.types';
 import { isAlertState, resolveClinicalState, toneForState } from '../../utils/clinical.utils';
 import { formatPercent } from '../../utils/format.utils';
 import cardStyles from '../../styles/card.module.css';
 import toneStyles from '../../styles/tones.module.css';
-import utilStyles from '../../styles/Utils.module.css';
+import utilStyles from '../../styles/utils.module.css';
 import styles from './LiveMonitor.module.css';
 
 interface LiveMonitorProps {
   live: LiveMonitorPayload | null;
 }
-
-const STATE_LABEL: Record<ClinicalState, string> = {
-  alerta: 'Alerta activa',
-  estable: 'Estado estable',
-  evaluando: 'Evaluación en curso',
-  desconocido: 'Estado informado por el dispositivo',
-};
 
 const svgProps = {
   width: 18,
@@ -31,7 +24,10 @@ const svgProps = {
   strokeLinejoin: 'round' as const,
 };
 
-/** Tarjeta Prioridad 1: estado actual, gravedad, patrón motriz y atención de la alerta. */
+const RING_RADIUS = 52;
+const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
+
+/** Tarjeta principal: estado actual, atención de la alerta, gravedad y patrón motriz. */
 export function LiveMonitor({ live }: LiveMonitorProps): ReactElement {
   const state = resolveClinicalState(live?.estado_actual ?? null);
   const tone = toneForState(state);
@@ -49,9 +45,14 @@ export function LiveMonitor({ live }: LiveMonitorProps): ReactElement {
   const attendedText =
     attended === null ? 'Sin datos disponibles' : pending ? 'Pendiente de atención' : 'Atendida';
 
+  const clamped = gravity === null ? 0 : Math.max(0, Math.min(100, gravity));
+  const ringOffset = RING_LENGTH * (1 - clamped / 100);
+
   return (
     <section
-      className={`${cardStyles.card} ${styles.card} ${toneStyles[`tone_${tone}`]}`}
+      className={`${cardStyles.card} ${styles.card} ${toneStyles[`tone_${tone}`]} ${
+        emergency ? styles.emergency : ''
+      }`}
       aria-labelledby="live-title"
     >
       {/* Región persistente: el anuncio sólo ocurre cuando cambia su contenido. */}
@@ -59,17 +60,9 @@ export function LiveMonitor({ live }: LiveMonitorProps): ReactElement {
         {emergency ? 'Alerta activa pendiente de atención' : ''}
       </p>
 
-      <div className={styles.head}>
-        <h3 id="live-title" className={styles.title}>
-          Monitoreo en tiempo real
-        </h3>
-        <span className={styles.badge}>
-          <span className={styles.badgeIcon} aria-hidden="true">
-            <StatusIcon state={state} />
-          </span>
-          {STATE_LABEL[state]}
-        </span>
-      </div>
+      <h3 id="live-title" className={styles.title}>
+        Monitoreo en tiempo real
+      </h3>
 
       <div className={styles.statusBlock} role="status">
         <span className={styles.stateIcon} aria-hidden="true">
@@ -107,29 +100,40 @@ export function LiveMonitor({ live }: LiveMonitorProps): ReactElement {
       </div>
 
       <div className={styles.metrics}>
-        <div className={styles.metric}>
+        <div className={`${styles.metric} ${styles.gaugeMetric}`}>
           <p className={styles.metricLabel} id="gravity-label">
             Gravedad actual
           </p>
-          {gravity !== null ? (
-            <div
-              className={styles.progress}
-              role="progressbar"
-              aria-labelledby="gravity-label"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={gravity}
-              aria-valuetext={gravityLabel ?? undefined}
-            >
-              <span
-                className={styles.progressFill}
-                style={{ width: `${Math.max(0, Math.min(100, gravity))}%` }}
-              />
-            </div>
-          ) : null}
-          <p className={`${styles.metricValue} ${gravityLabel ? '' : styles.noData}`}>
-            {gravityLabel ?? 'Sin datos disponibles'}
-          </p>
+          <div
+            className={styles.ringWrap}
+            {...(gravity !== null
+              ? {
+                  role: 'progressbar',
+                  'aria-labelledby': 'gravity-label',
+                  'aria-valuemin': 0,
+                  'aria-valuemax': 100,
+                  'aria-valuenow': gravity,
+                  'aria-valuetext': gravityLabel ?? undefined,
+                }
+              : {})}
+          >
+            <svg className={styles.ring} viewBox="0 0 120 120" aria-hidden="true">
+              <circle className={styles.ringTrack} cx="60" cy="60" r={RING_RADIUS} />
+              {gravity !== null ? (
+                <circle
+                  className={styles.ringFill}
+                  cx="60"
+                  cy="60"
+                  r={RING_RADIUS}
+                  strokeDasharray={RING_LENGTH}
+                  strokeDashoffset={ringOffset}
+                />
+              ) : null}
+            </svg>
+            <p className={`${styles.ringValue} ${gravityLabel ? '' : styles.ringNoData}`}>
+              {gravityLabel ?? 'Sin datos disponibles'}
+            </p>
+          </div>
         </div>
 
         <div className={styles.metric}>

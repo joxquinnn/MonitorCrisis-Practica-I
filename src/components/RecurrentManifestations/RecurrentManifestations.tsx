@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import type { RecurrentManifestationPayload } from '../../types/dashboard.types';
 import { formatInteger, formatPercent } from '../../utils/format.utils';
 import cardStyles from '../../styles/card.module.css';
+import utilStyles from '../../styles/utils.module.css';
 import styles from './RecurrentManifestations.module.css';
 
 interface RecurrentManifestationsProps {
@@ -9,8 +10,8 @@ interface RecurrentManifestationsProps {
 }
 
 /**
- * Sección Prioridad 3: manifestaciones recurrentes con barras CSS accesibles
- * (frecuencia y porcentaje exactos) y una tabla legible de respaldo.
+ * Manifestaciones recurrentes en una única tabla: nombre, frecuencia absoluta
+ * y porcentaje con barra. Así la información no se presenta dos veces.
  */
 export function RecurrentManifestations({ manifestaciones }: RecurrentManifestationsProps): ReactElement {
   const rows = manifestaciones.filter(
@@ -18,80 +19,70 @@ export function RecurrentManifestations({ manifestaciones }: RecurrentManifestat
   );
 
   return (
-    <section className={cardStyles.card} aria-labelledby="recurrent-title">
-      <div className={styles.head}>
-        <h3 id="recurrent-title" className={styles.title}>
-          Manifestaciones recurrentes
-        </h3>
-        <p className={styles.caption}>Frecuencia y porcentaje de cada manifestación en el período.</p>
-      </div>
+    <section className={`${cardStyles.card} ${styles.card}`} aria-labelledby="recurrent-title">
+      <h3 id="recurrent-title" className={styles.title}>
+        Manifestaciones recurrentes
+      </h3>
 
       {rows.length === 0 ? (
         <p className={styles.empty}>Sin datos disponibles</p>
       ) : (
-        <>
-          <ul className={styles.bars}>
-            {rows.map((item, index) => {
-              const percent = item.porcentaje;
-              const percentLabel = formatPercent(percent);
-              const freqLabel = formatInteger(item.frecuencia);
-              const name = item.sintoma ?? 'Sin datos disponibles';
-              const labelId = `recurrencia-nombre-${index}`;
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <caption className={utilStyles.srOnly}>
+              Manifestaciones recurrentes con su frecuencia y porcentaje
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Manifestación</th>
+                <th scope="col" className={styles.num}>
+                  Frecuencia
+                </th>
+                <th scope="col">Porcentaje</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((item, index) => {
+                const percent = item.porcentaje;
+                const percentLabel = formatPercent(percent);
+                const name = item.sintoma ?? 'Sin datos disponibles';
+                const freq = formatInteger(item.frecuencia);
 
-              return (
-                <li key={`${name}-${index}`} className={styles.barItem}>
-                  <div className={styles.barHeader}>
-                    <span className={styles.barName} id={labelId}>
-                      {name}
-                    </span>
-                    <span className={styles.barValues}>
-                      {freqLabel ?? 'Sin datos disponibles'} registros ·{' '}
-                      {percentLabel ?? 'Sin datos disponibles'}
-                    </span>
-                  </div>
-                  {percent !== null ? (
-                    <div
-                      className={styles.track}
-                      role="progressbar"
-                      aria-labelledby={labelId}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-valuenow={percent}
-                      aria-valuetext={`${name}: ${freqLabel ?? 'sin datos'} registros, ${percentLabel ?? 'sin datos'}`}
-                    >
-                      <span
-                        className={styles.fill}
-                        style={{ width: `${Math.max(0, Math.min(100, percent))}%` }}
-                      />
-                    </div>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
-
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <caption className={styles.tableCaption}>Manifestaciones recurrentes detalladas</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Manifestación</th>
-                  <th scope="col">Frecuencia</th>
-                  <th scope="col">Porcentaje</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((item, index) => (
-                  <tr key={`fila-${index}`}>
-                    <th scope="row">{item.sintoma ?? 'Sin datos disponibles'}</th>
-                    <td>{formatInteger(item.frecuencia) ?? 'Sin datos disponibles'}</td>
-                    <td>{formatPercent(item.porcentaje) ?? 'Sin datos disponibles'}</td>
+                return (
+                  <tr key={`${name}-${index}`}>
+                    <th scope="row">{name}</th>
+                    <td className={`${styles.num} ${freq ? '' : styles.noData}`}>
+                      {freq ?? 'Sin datos disponibles'}
+                    </td>
+                    <td>
+                      <div className={styles.pctCell}>
+                        {percent !== null ? (
+                          <div
+                            className={styles.track}
+                            role="progressbar"
+                            aria-label={`${name}: ${percentLabel ?? ''}`}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-valuenow={percent}
+                            aria-valuetext={percentLabel ?? undefined}
+                          >
+                            <span
+                              className={styles.fill}
+                              style={{ width: `${Math.max(0, Math.min(100, percent))}%` }}
+                            />
+                          </div>
+                        ) : null}
+                        <span className={`${styles.pctText} ${percentLabel ? '' : styles.noData}`}>
+                          {percentLabel ?? 'Sin datos disponibles'}
+                        </span>
+                      </div>
+                    </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   );

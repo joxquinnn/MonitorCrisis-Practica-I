@@ -4,7 +4,7 @@ import { ClockIcon } from '../../icons/ClockIcon';
 import type { DeviceScenario, DevicePayload } from '../../types/dashboard.types';
 import { resolveConnection } from '../../utils/clinical.utils';
 import { formatLocalDateTime, formatPercent } from '../../utils/format.utils';
-import utilStyles from '../../styles/Utils.module.css';
+import utilStyles from '../../styles/utils.module.css';
 import styles from './Header.module.css';
 
 interface HeaderProps {
@@ -97,7 +97,7 @@ export function Header({
           </span>
 
           <label className={styles.field} htmlFor="device-select">
-            <span className={styles.fieldLabel}>Dispositivo</span>
+            <span className={styles.fieldLabel}>Tipo de situación</span>
             <select
               id="device-select"
               className={styles.select}
