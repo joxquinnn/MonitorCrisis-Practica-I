@@ -8,14 +8,14 @@ interface TopSymptomProps {
   masFrecuente: MostFrequentSymptomPayload | null;
 }
 
-/** Tarjeta Prioridad 2: síntoma predominante (`estadisticas_agregadas.sintomas.mas_frecuente`). */
+/** Síntoma predominante (`estadisticas_agregadas.sintomas.mas_frecuente`). */
 export function TopSymptom({ masFrecuente }: TopSymptomProps): ReactElement {
   const nombre = masFrecuente?.nombre ?? null;
   const registros = formatInteger(masFrecuente?.registros ?? null);
   const incidencia = formatPercent(masFrecuente?.porcentaje_incidencia ?? null);
 
   return (
-    <section className={cardStyles.card} aria-labelledby="top-symptom-title">
+    <section className={`${cardStyles.card} ${styles.card}`} aria-labelledby="top-symptom-title">
       <h3 id="top-symptom-title" className={styles.title}>
         Síntoma más frecuente
       </h3>
@@ -23,13 +23,23 @@ export function TopSymptom({ masFrecuente }: TopSymptomProps): ReactElement {
       {nombre ? (
         <>
           <p className={styles.name}>{nombre}</p>
-          <p className={styles.hint}>
-            {registros ?? 'Sin datos disponibles'} registros ·{' '}
-            {incidencia ?? 'Sin datos disponibles'} de incidencia
-          </p>
+          <dl className={styles.stats}>
+            <div className={styles.stat}>
+              <dt className={styles.statLabel}>Registros</dt>
+              <dd className={`${styles.statValue} ${registros ? '' : styles.noData}`}>
+                {registros ?? 'Sin datos disponibles'}
+              </dd>
+            </div>
+            <div className={styles.stat}>
+              <dt className={styles.statLabel}>Incidencia</dt>
+              <dd className={`${styles.statValue} ${incidencia ? '' : styles.noData}`}>
+                {incidencia ?? 'Sin datos disponibles'}
+              </dd>
+            </div>
+          </dl>
         </>
       ) : (
-        <p className={styles.hint}>Sin datos disponibles</p>
+        <p className={styles.empty}>Sin datos disponibles</p>
       )}
     </section>
   );
