@@ -1,20 +1,16 @@
-/* Tarjeta base: superficie blanca, borde fino y sombra difusa. */
+/* Tarjeta base: superficie blanca, borde fino y sombra con matiz celeste. */
 .card {
   position: relative;
   background: var(--db-surface);
   border: 1px solid var(--db-line-strong);
   border-radius: var(--db-radius);
-  padding: 26px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  padding: 24px;
+  box-shadow: var(--db-shadow-card);
   color: var(--db-ink);
-}
-
-.card:hover {
-  border-color: var(--db-line);
 }
 
 @media (max-width: 560px) {
   .card {
-    padding: 20px;
+    padding: 18px;
   }
 }
